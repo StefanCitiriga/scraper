@@ -70,3 +70,57 @@ app.get('/wordcount', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
+app.post('/scrape', async (req, res) => {
+    try {
+      const { url, elements } = req.body;
+  
+      // Send a request to the URL and get the HTML content
+      const response = await axios.get(url);
+      
+      // Load HTML content using Cheerio
+      const $ = cheerio.load(response.data);
+      
+      // Extract specified elements
+      const scrapedData: any = {};
+      console.log(scrapedData);
+      if (elements.includes('h3')) {
+        scrapedData.headings = [];
+        $('h3').each((index, element) => {
+          scrapedData.headings.push($(element).text());
+        });
+      }
+      
+      if (elements.includes('p')) {
+        scrapedData.paragraphs = [];
+        $('p').each((index, element) => {
+          scrapedData.paragraphs.push($(element).text());
+        });
+      }
+  
+      if (elements.includes('img')) {
+        scrapedData.images = [];
+        $('img').each((index, element) => {
+          scrapedData.images.push($(element).attr('src'));
+        });
+      }
+  
+      if (elements.includes('a')) {
+        scrapedData.links = [];
+        $('a').each((index, element) => {
+          scrapedData.links.push({
+            text: $(element).text(),
+            href: $(element).attr('href'),
+          });
+        });
+      }
+  
+      // Return the scraped data in JSON format
+      res.json(scrapedData);
+      console.log(elements);
+    } catch (error) {
+      // Handle errors and return an error message
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
